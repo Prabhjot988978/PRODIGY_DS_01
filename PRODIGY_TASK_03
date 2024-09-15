@@ -1,0 +1,105 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
+from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
+data= pd.read_csv(r"C:\Users\HP\Documents\Datasets\test.csv")
+data
+data.info()
+data.describe()
+data.isna().sum()
+data.duplicated().sum()
+
+sns.histplot(data= data, x= "age", kde= True, hue= "y")
+plt.title("Age Distribution vs Term Deposit")
+plt.show()
+plt.figure(figsize= (14,5))
+sns.countplot(data= data, x= 'job', hue= 'y', palette= sns.color_palette('muted'))
+plt.title('Job Description vs Term Deposit')
+plt.show()
+
+data['default'].value_counts()
+plt.figure(figsize= (8,4))
+sns.countplot(x= 'housing', data= data, hue= 'y', width= 0.55)
+plt.title('Housing Loan taken vs Term Deposit')
+
+plt.figure(figsize= (8,4))
+sns.countplot(x= 'loan', data= data, hue= 'y', width= 0.55)
+plt.title('Personal Loan taken vs Term Deposit')
+
+plt.figure(figsize= (8,4))
+sns.countplot(x= 'poutcome', data= data, hue= 'y')
+plt.title('Previous Campaign Outcome vs Term Deposit')
+
+print(data.y.value_counts())
+print()
+keys= data.y.value_counts().index
+val= data.y.value_counts().values
+plt.title('Distribution of Term Deposit')
+explode= [0.0, 0.3]
+plt.pie(val, labels= keys, explode= explode, autopct= '%.0f%%', shadow= True)
+plt.show()
+
+data.plot(kind= 'box', subplots= True, layout= (4,2), figsize= (15,30))
+plt.show()
+columns= ['age','balance','duration','campaign','pdays','previous']
+for col in columns:
+    q1= np.percentile(data[col], 25)
+    q3= np.percentile(data[col], 75)
+    iqr= q3 - q1
+    lower= q1 - 1.5 * iqr
+    upper= q3 + 1.5 * iqr
+    data= data[(data[col] >= lower) & (data[col] <= upper)]
+
+data.info()
+data.plot(kind= 'box', subplots= True, layout= (5,2), figsize= (15,30))
+plt.show()
+cols= data.select_dtypes("object").columns
+cols
+le= LabelEncoder()
+le
+data[cols]= data[cols].apply(le.fit_transform)
+data.head()
+plt.figure(figsize= (20,15))
+sns.heatmap(data.corr(), annot= True)
+plt.show()
+x= data.drop('y', axis= 1)
+y= data.y
+scaler= StandardScaler()
+x_scaled= pd.DataFrame(scaler.fit_transform(x), columns= x.columns)
+x_scaled
+train_x, test_x, train_y, test_y= train_test_split(x, y, test_size= 0.3, random_state= 42)
+tree= DecisionTreeClassifier()
+tree.fit(train_x, train_y)
+print('Train Score: {}'.format(tree.score(train_x, train_y)))
+print('Test Score: {}'.format(tree.score(test_x, test_y)))
+cross_val_score(tree, train_x, train_y, cv= 5).mean()
+y_pred= tree.predict(test_x)
+print('Classification Report\n',classification_report(test_y, y_pred))
+grid= {'max_depth': [3,5,7,10,None], 'criterion': ['gini','entropy'], 'min_samples_leaf': [3,5,7,9,10,20]}
+gscv= GridSearchCV(tree, grid, cv= 5, verbose= 1)
+gscv.fit(train_x,train_y)
+gscv.best_params_
+gscv.best_estimator_
+cross_val_score(gscv.best_estimator_, train_x, train_y, cv= 5).mean()
+clf= DecisionTreeClassifier(criterion= 'gini', max_depth= 5, min_samples_leaf= 5)
+clf.fit(train_x,train_y)
+print('Train Score: {}'.format(clf.score(train_x, train_y)))
+print('Test Score: {}'.format(clf.score(test_x, test_y)))
+pred_y= clf.predict(test_x)
+cm= confusion_matrix(pred_y, test_y)
+print(cm)
+plt.show()
+
+print('Classification Report\n',classification_report(pred_y, test_y))
+accuracy= accuracy_score(test_y, pred_y)
+print("Test Accuracy of Decision Tree Classifier : {}".format(accuracy*100))
+cross_val= cross_val_score(clf, test_x, test_y, cv= 5).mean()
+print("Cross Validation Accuracy Scores of Decision Tree :",cross_val*100)
+
+from sklearn import tree
+fig= plt.figure(figsize= (20,20))
+t= tree.plot_tree(clf, filled=True, feature_names= x.columns)
