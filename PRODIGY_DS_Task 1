@@ -1,0 +1,76 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+data= pd.read_csv(r'C:\Users\HP\Documents\Datasets\city_temperature.csv')
+data
+data.shape
+data.info(show_counts= True)
+data.isna().sum()
+data.drop('State', axis=1, inplace= True)
+data.shape
+sns.boxplot(data['AvgTemperature'])
+sns.boxplot(data['Year'])
+data.query('AvgTemperature < 5')
+data.drop(data.query('AvgTemperature < 10').index, axis=0, inplace= True)
+data.query('Year < 1995')
+sns.boxplot(data['Year'])
+sns.boxplot(data['AvgTemperature'])
+data.shape
+data
+
+plt.figure(figsize= (10,8))
+sns.histplot(data= data, x= 'AvgTemperature', bins= 50)
+plt.title('Histogram showing Temperature Variations')
+plt.xlabel('Average Temperature')
+plt.ylabel('Frequency')
+plt.grid()
+
+plt.figure(figsize= (10,12))
+sns.histplot(data= data, x= 'AvgTemperature', hue= 'Region', kde= True)
+plt.title('Histogram showing Temperature Variations with respect to Region')
+plt.xlabel('Average Temperature')
+plt.ylabel('Frequency')
+plt.grid()
+plt.show()
+
+data.groupby('Region')['AvgTemperature'].mean()
+plt.figure(figsize= (15,7))
+plt.title('Bar Graph of Average Temperature with each Region')
+plt.xlabel('Region')
+plt.ylabel('Average Temperature')
+x= data['Region'].unique()
+y= data.groupby('Region')['AvgTemperature'].mean()
+plt.bar(x, y, color= 'Green')
+
+plt.figure(figsize= (10,12))
+sns.histplot(data= data, x= 'AvgTemperature', hue= 'Country', kde= True)
+plt.title('Histogram showing Temperature Variations with respect to Country')
+plt.xlabel('Average Temperature')
+plt.ylabel('Frequency')
+plt.grid()
+plt.show()
+
+plt.figure(figsize= (10,22))
+plt.title('Bar Graph of Average Temperature with each Country')
+plt.xlabel('Average Temperature')
+plt.ylabel('Country')
+x= data['Country'].unique()
+y= data.groupby('Country')['AvgTemperature'].mean()
+plt.barh(x,y)
+plt.show()
+
+plt.figure(figsize= (13,7))
+plt.title('Bar Graph of Region')
+plt.xlabel('Region')
+plt.ylabel('Frequency')
+x= data['Region'].unique()
+y= data['Region'].value_counts()
+plt.bar(x, y, color= 'Brown')
+
+plt.figure(figsize= (13,5))
+sns.histplot(data= data, x= 'Region')
+plt.title('Histogram of Region')
+plt.xlabel('Region')
+plt.ylabel('Frequency')
+plt.show()
